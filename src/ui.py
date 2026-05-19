@@ -71,13 +71,13 @@ class TrayIcon:
 
     def start(self):
         menu = pystray.Menu(
-            pystray.MenuItem("WhisperFlow", None, enabled=False),
+            pystray.MenuItem("FreeFlow", None, enabled=False),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quitter", lambda: self._on_quit()),
         )
         self._icon = pystray.Icon(
-            "whisperflow", self._make_icon(self.COLORS["ready"]),
-            "WhisperFlow", menu,
+            "freeflow", self._make_icon(self.COLORS["ready"]),
+            "FreeFlow", menu,
         )
         self._thread = threading.Thread(target=self._icon.run, daemon=True)
         self._thread.start()
@@ -91,7 +91,7 @@ class TrayIcon:
             self._icon.stop()
 
 
-class WhisperFlowUI:
+class FreeFlowUI:
     def __init__(self, opacity: float = 0.85, on_quit=None):
         self._external_quit = on_quit
         self.overlay = Overlay()

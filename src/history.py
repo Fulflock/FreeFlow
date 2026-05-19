@@ -14,7 +14,7 @@ def _get_foreground_window_title() -> str:
 
 class DictationHistory:
     def __init__(self, history_dir: str = None):
-        self._dir = history_dir or os.path.join(os.path.expanduser("~"), ".whisperflow", "history")
+        self._dir = history_dir or os.path.join(os.path.expanduser("~"), ".freeflow", "history")
         os.makedirs(self._dir, exist_ok=True)
 
     def _day_file(self, d: date = None) -> str:

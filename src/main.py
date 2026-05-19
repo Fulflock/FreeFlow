@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.audio import AudioRecorder
 from src.transcriber import Transcriber
 from src.injector import paste_at_cursor
-from src.ui import WhisperFlowUI
+from src.ui import FreeFlowUI
 from src.history import DictationHistory
 
 
@@ -28,7 +28,7 @@ def load_config():
     return {}
 
 
-class WhisperFlow:
+class FreeFlow:
     def __init__(self):
         self.config = load_config()
         self.recorder = AudioRecorder()
@@ -36,7 +36,7 @@ class WhisperFlow:
             model_size=self.config.get("model_size", "base"),
             language=self.config.get("language", "fr"),
         )
-        self.ui = WhisperFlowUI(
+        self.ui = FreeFlowUI(
             opacity=self.config.get("overlay_opacity", 0.85),
             on_quit=self.quit,
         )
@@ -121,13 +121,13 @@ class WhisperFlow:
         self.ui.stop()
 
     def run(self):
-        print("WhisperFlow — Chargement du modèle Whisper...")
+        print("FreeFlow — Chargement du modèle Whisper...")
         self.transcriber.warm_up()
-        print("WhisperFlow — Prêt ! Maintiens Ctrl+Space pour dicter.")
+        print("FreeFlow — Prêt ! Maintiens Ctrl+Space pour dicter.")
         self._listener.start()
         self.ui.start()
 
 
 if __name__ == "__main__":
-    app = WhisperFlow()
+    app = FreeFlow()
     app.run()

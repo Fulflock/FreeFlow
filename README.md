@@ -1,14 +1,14 @@
-# WhisperFlow
+# FreeFlow
 
-**Free, open-source alternative to Wispr Flow. Voice dictation that runs 100% locally on your machine.**
+**Free, open-source voice dictation that runs 100% locally on your machine.**
 
 No subscription. No cloud. No data sent anywhere. Just speak and paste.
 
 https://github.com/user-attachments/assets/demo-placeholder
 
-## Why WhisperFlow?
+## Why FreeFlow?
 
-| | Wispr Flow | WhisperFlow |
+| | Paid alternatives | FreeFlow |
 |---|---|---|
 | Price | $15/month | **Free forever** |
 | Privacy | Voice sent to cloud | **100% local** |
@@ -28,7 +28,7 @@ Works in **any application** — browser, Word, Slack, VS Code, Discord, anythin
 
 ### Option 1: Download the .exe (easiest)
 
-1. Download `WhisperFlow.exe` from [Releases](../../releases)
+1. Download `FreeFlow.exe` from [Releases](../../releases)
 2. Run it
 3. Done
 
@@ -36,8 +36,8 @@ Works in **any application** — browser, Word, Slack, VS Code, Discord, anythin
 
 ```bash
 # Requires Python 3.12+
-git clone https://github.com/YOUR_USERNAME/WhisperFlow.git
-cd WhisperFlow
+git clone https://github.com/Fulflock/FreeFlow.git
+cd FreeFlow
 pip install -r requirements.txt
 python -m src.main
 ```
@@ -48,7 +48,7 @@ python -m src.main
 - **Click-to-paste** — Text waits for you to click where you want it
 - **Smart cleanup** — Removes filler words ("um", "uh", "euh")
 - **Punctuation** — Automatic capitalization and punctuation
-- **Dictation history** — All your dictations saved locally in `~/.whisperflow/history/`
+- **Dictation history** — All your dictations saved locally in `~/.freeflow/history/`
 - **System tray** — Runs quietly in the background
 - **Floating overlay** — Shows recording/transcription status
 - **French & English** — Change language in `config.json`
@@ -90,4 +90,4 @@ MIT — do whatever you want with it.
 
 ---
 
-If this saved you $15/month, consider giving it a star.
+If this is useful to you, consider giving it a star.

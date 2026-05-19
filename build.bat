@@ -1,16 +1,16 @@
 @echo off
-title WhisperFlow Build
+title FreeFlow Build
 cd /d "%~dp0"
 
 echo Installation de PyInstaller...
 py -3.12 -m pip install pyinstaller
 
 echo.
-echo Build de WhisperFlow.exe...
+echo Build de FreeFlow.exe...
 py -3.12 -m PyInstaller ^
     --onedir ^
     --noconsole ^
-    --name WhisperFlow ^
+    --name FreeFlow ^
     --add-data "config.json;." ^
     --hidden-import faster_whisper ^
     --hidden-import ctranslate2 ^
@@ -34,8 +34,8 @@ py -3.12 -m PyInstaller ^
 
 echo.
 echo Copie du config.json a cote de l'exe...
-copy config.json dist\WhisperFlow\config.json
+copy config.json dist\FreeFlow\config.json
 
 echo.
-echo Build termine ! L'exe est dans dist\WhisperFlow\WhisperFlow.exe
+echo Build termine ! L'exe est dans dist\FreeFlow\FreeFlow.exe
 pause
