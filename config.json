@@ -1,0 +1,7 @@
+{
+  "hotkey_combo": ["ctrl", "space"],
+  "language": "fr",
+  "model_size": "small",
+  "overlay_position": "bottom_right",
+  "overlay_opacity": 0.85
+}
