@@ -14,7 +14,7 @@ VK_LBUTTON = 0x01
 
 
 def _is_left_click_pressed() -> bool:
-    return ctypes.windll.user32.GetAsyncKeyState(VK_LBUTTON) & 0x8000 != 0
+    return (ctypes.windll.user32.GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0
 
 
 def _watch_for_click():
@@ -52,6 +52,18 @@ def _do_paste(text: str) -> None:
         old_clipboard = None
 
     pyperclip.copy(text)
+
+    # Wait for physical Ctrl release (avoids phantom Ctrl-up confusing the keyboard hook)
+    try:
+        import ctypes
+        VK_CONTROL = 0x11
+        deadline = time.time() + 0.5  # max 500ms
+        while ctypes.windll.user32.GetAsyncKeyState(VK_CONTROL) & 0x8000:
+            if time.time() > deadline:
+                break
+            time.sleep(0.005)
+    except Exception:
+        pass
 
     _keyboard.press(Key.ctrl)
     _keyboard.press("v")

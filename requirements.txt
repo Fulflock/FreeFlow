@@ -5,3 +5,6 @@ pystray
 Pillow
 pyperclip
 numpy
+pywebview
+keyboard==0.13.5
+pywin32>=306

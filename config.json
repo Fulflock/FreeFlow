@@ -1,7 +1,9 @@
 {
   "hotkey_combo": ["ctrl", "space"],
   "language": "fr",
-  "model_size": "small",
+  "model_size": "base",
   "overlay_position": "bottom_right",
-  "overlay_opacity": 0.85
+  "overlay_opacity": 0.85,
+  "update_check_enabled": true,
+  "github_repo": ""
 }

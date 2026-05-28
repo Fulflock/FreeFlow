@@ -1,7 +1,33 @@
+# Python
 __pycache__/
 *.pyc
-dist/
-build/
-*.spec
+*.pyo
 *.egg-info/
 .env
+.venv/
+venv/
+
+# Build artifacts — too big for git, attached to GitHub Release instead
+dist/
+build/
+dist_installer/
+*.log
+build_output.log
+build_run.log
+hotkey_debug*.log
+app_out.log
+app_err.log
+
+# Test / scratch
+test_err.txt
+test_log.txt
+hide
+see-through,+
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Note: FreeFlow.spec IS committed (required to reproduce the build)
