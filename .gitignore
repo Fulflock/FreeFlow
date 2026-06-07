@@ -18,6 +18,12 @@ hotkey_debug*.log
 app_out.log
 app_err.log
 
+# Bundled transcription model (~148 MB) — downloaded at build time via
+# faster_whisper.download_model("base"), shipped inside the installer, never
+# committed to git. Regenerate with: python -c "from faster_whisper import
+# download_model; download_model('base', output_dir='models/base')"
+models/
+
 # Test / scratch
 test_err.txt
 test_log.txt

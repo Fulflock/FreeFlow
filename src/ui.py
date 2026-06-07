@@ -371,7 +371,7 @@ html, body {
       </div>
       <div class="transcribe-info">
         <div class="transcribe-label">transcription…</div>
-        <div class="transcribe-meta">whisper-small · local</div>
+        <div class="transcribe-meta">whisper · 100% local</div>
       </div>
       <span class="pill-local">&#129504; local</span>
     </div>
@@ -559,11 +559,19 @@ class TrayIcon:
 
 # ── Main UI class ──────────────────────────────────────────────────────────
 class FreeFlowUI:
-    def __init__(self, opacity=0.85, on_quit=None, amp_provider=None):
+    def __init__(self, opacity=0.85, on_quit=None, amp_provider=None,
+                 get_config=None, apply_config=None):
         self._external_quit = on_quit
         self._opacity = opacity
         self._window = None
         self._ready = threading.Event()
+        # Idempotency guard: prevents the tray-Quit recursion
+        # (tray → FreeFlowUI.quit → FreeFlow.quit → FreeFlowUI.stop → FreeFlowUI.quit → …)
+        # from blowing the stack and leaving the process zombie.
+        self._quitting = False
+        # Config bridge for the Settings window (live read + apply-on-save).
+        self._get_config = get_config or (lambda: {})
+        self._apply_config = apply_config or (lambda cfg: None)
         # Audio-reactive waveform: a callable returning current RMS amp (0..1).
         # main.py wires this to AudioRecorder.get_current_amplitude.
         self._amp_provider = amp_provider or (lambda: 0.0)
@@ -577,10 +585,19 @@ class FreeFlowUI:
         )
         # Floating FF bubble (tkinter) — replaces the pywebview idle window.
         self.bubble = IdleBubble(gap_above_taskbar=110)
-        # Secondary windows (opened on demand).
+        # Secondary windows (opened on demand). Each entry tracks the live
+        # pywebview window so a second click focuses it instead of stacking
+        # a new one. Cleared by the window's `closed` event.
         self._settings_win = None
         self._history_win = None
         self._onboarding_win = None
+        self._main_window = None
+        # Open-flags: True while the matching window is alive. Set on create,
+        # cleared by the `closed` event. If we ever fail to hook `closed`, we
+        # leave the flag False so the user can never get locked out (worst case
+        # reverts to the old stacking behavior).
+        self._open = {"main": False, "settings": False,
+                      "history": False, "onboarding": False}
 
     def start(self):
         """Start the UI main loop (blocks)."""
@@ -636,46 +653,95 @@ class FreeFlowUI:
         webview.start(func=_on_start, debug=False)
 
     # ── Secondary windows ─────────────────────────────────────────────────
-    def open_settings(self):
-        """Open the Réglages window (creates a new pywebview window)."""
+    def _register_window(self, key, wrapper):
+        """Track a freshly-opened window so a second click focuses it instead
+        of stacking a duplicate. Hooks pywebview's `closed` event to clear the
+        flag. If hooking fails we leave the flag False (never lock the user out).
+        """
+        win_obj = getattr(wrapper, "_window", None) if wrapper else None
+        if win_obj is None:
+            self._open[key] = False
+            return
+
+        def _on_closed():
+            self._open[key] = False
+
         try:
-            self._settings_win = SettingsWindow()
+            win_obj.events.closed += _on_closed
+            self._open[key] = True
+        except Exception:
+            self._open[key] = False
+
+    def _bring_to_front(self, wrapper):
+        """Best-effort raise/un-minimize of an already-open window."""
+        win_obj = getattr(wrapper, "_window", None) if wrapper else None
+        if win_obj is None:
+            return
+        for method in ("restore", "show"):
+            try:
+                getattr(win_obj, method)()
+            except Exception:
+                pass
+
+    def open_settings(self):
+        """Open (or focus) the Réglages window."""
+        if self._open.get("settings"):
+            self._bring_to_front(self._settings_win)
+            return
+        try:
+            self._settings_win = SettingsWindow(
+                config=self._get_config(),
+                on_apply=self._apply_config,
+            )
             self._settings_win.open()
+            self._register_window("settings", self._settings_win)
         except Exception:
             import traceback
             traceback.print_exc()
 
     def open_history(self):
-        """Open the Historique window (fresh load each time)."""
+        """Open (or focus) the Historique window."""
+        if self._open.get("history"):
+            self._bring_to_front(self._history_win)
+            return
         try:
             self._history_win = HistoryWindow()
             self._history_win.open()
+            self._register_window("history", self._history_win)
         except Exception:
             import traceback
             traceback.print_exc()
 
     def open_onboarding(self):
-        """Open the Bienvenue (onboarding) window."""
+        """Open (or focus) the Bienvenue (onboarding) window."""
+        if self._open.get("onboarding"):
+            self._bring_to_front(self._onboarding_win)
+            return
         try:
             self._onboarding_win = OnboardingWindow()
             self._onboarding_win.open()
+            self._register_window("onboarding", self._onboarding_win)
         except Exception:
             import traceback
             traceback.print_exc()
 
     def open_main_window(self):
-        """Open the FreeFlow main window (history + chart). Runs in a thread."""
+        """Open (or focus) the FreeFlow main window. Runs in a thread."""
+        if self._open.get("main"):
+            self._bring_to_front(self._main_window)
+            return
         from src.windows.main_window import MainWindow
+
         def _open():
             try:
-                mw = MainWindow()
-                mw.open()
+                self._main_window = MainWindow()
+                self._main_window.open()
+                self._register_window("main", self._main_window)
             except Exception:
                 import traceback
                 traceback.print_exc()
         # pywebview create_window is fine to call from any thread; the window
         # registers with the existing webview loop.
-        import threading
         threading.Thread(target=_open, daemon=True).start()
 
     def _js(self, code):
@@ -813,18 +879,41 @@ class FreeFlowUI:
         self.tray.set_state("ready")
 
     def stop(self):
+        # Alias kept for API compat — same code path as quit().
         self.quit()
 
     def quit(self):
-        self.tray.stop()
+        # Idempotent: second entry (via FreeFlow.quit → ui.stop → ui.quit) is a no-op.
+        # Without this guard, the tray-Quit click recurses until RecursionError
+        # and the process becomes a zombie (icon + bubble stuck on screen).
+        if self._quitting:
+            return
+        self._quitting = True
+        try:
+            self.tray.stop()
+        except Exception:
+            import traceback
+            traceback.print_exc()
         try:
             self.bubble.stop()
         except Exception:
-            pass
+            import traceback
+            traceback.print_exc()
         if self._window:
             try:
                 self._window.destroy()
             except Exception:
-                pass
-        if self._external_quit:
-            self._external_quit()
+                import traceback
+                traceback.print_exc()
+        # Hand back to the host (FreeFlow.quit in main.py). Clearing the ref
+        # first is belt-and-suspenders: if FreeFlow.quit ever recurses into
+        # ui.quit again, the idempotency guard above catches it — but clearing
+        # the ref means even a bare ui.quit() call from elsewhere won't loop.
+        external = self._external_quit
+        self._external_quit = None
+        if external:
+            try:
+                external()
+            except Exception:
+                import traceback
+                traceback.print_exc()

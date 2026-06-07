@@ -82,16 +82,16 @@ class DictationHistory:
 
     def search(self, query: str) -> list[dict]:
         q = query.lower()
-        return [e for e in self.get_all() if q in e["text"].lower()]
+        return [e for e in self.get_all() if q in (e.get("text") or "").lower()]
 
     def get_stats(self) -> dict:
         all_e = self.get_all()
         today_e = self.get_today()
         return {
             "total_dictations": len(all_e),
-            "total_words": sum(len(e["text"].split()) for e in all_e),
+            "total_words": sum(len((e.get("text") or "").split()) for e in all_e),
             "today_dictations": len(today_e),
-            "today_words": sum(len(e["text"].split()) for e in today_e),
+            "today_words": sum(len((e.get("text") or "").split()) for e in today_e),
         }
 
     # ── Aggregated word counts per day for the chart ────────────────────

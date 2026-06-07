@@ -382,7 +382,7 @@ ul.checks li .dot {
           <p class="lead">
             Maintiens un raccourci, parle, lâche — ton texte est collé là où tu cliques.
           </p>
-          <p class="muted">version 0.1 · MIT · made solo ♡</p>
+          <p class="muted">version 0.1.1 · MIT · made solo ♡</p>
         </div>
         <div class="hero">
           <svg width="120" height="106" viewBox="0 0 64 56">

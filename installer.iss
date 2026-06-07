@@ -1,6 +1,6 @@
-; installer.iss — Inno Setup script for FreeFlow (no admin install)
+; installer.iss — Inno Setup script for FreeFlow (no admin, near one-click)
 #define MyAppName      "FreeFlow"
-#define MyAppVersion   "0.1.0"
+#define MyAppVersion   "0.1.1"
 #define MyAppPublisher "Benjamin Mathias"
 #define MyAppExeName   "FreeFlow.exe"
 
@@ -11,7 +11,6 @@ AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\{#MyAppName}
 DefaultGroupName={#MyAppName}
-DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=dist_installer
@@ -21,37 +20,51 @@ UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/ultra64
 SolidCompression=yes
 WizardStyle=modern
-ArchitecturesInstallIn64BitMode=x64
-ArchitecturesAllowed=x64
-; Auto-update support: if FreeFlow is already running, Inno Setup will close
-; it cleanly (instead of failing on locked files) and restart it after install.
+ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed=x64compatible
+
+; ── Near one-click: skip every question ──────────────────────────────────
+; No language picker, no welcome page, no install-location page, no
+; "additional tasks" page, no "ready to install" confirmation, no finished
+; page. The user double-clicks → a progress bar runs → FreeFlow launches.
+ShowLanguageDialog=no
+DisableWelcomePage=yes
+DisableDirPage=yes
+DisableProgramGroupPage=yes
+DisableReadyPage=yes
+DisableFinishedPage=yes
+
+; Auto-update support: if FreeFlow is already running, close it cleanly
+; (instead of failing on locked files) and restart it after install.
 CloseApplications=force
 RestartApplications=yes
 
 [Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
+; French first so the no-dialog default is French.
 Name: "french";  MessagesFile: "compiler:Languages\French.isl"
-
-[Tasks]
-Name: "desktopicon";   Description: "{cm:CreateDesktopIcon}";   GroupDescription: "{cm:AdditionalIcons}"
-Name: "startmenuicon"; Description: "Ajouter au menu Demarrer"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
-Source: "dist\FreeFlow.exe";   DestDir: "{app}"; Flags: ignoreversion
-Source: "config.json";         DestDir: "{app}"; Flags: ignoreversion onlyifdoesntexist
-Source: "assets\freeflow.ico"; DestDir: "{app}\assets"; Flags: ignoreversion
+; onedir payload — the whole dist\FreeFlow folder (exe + _internal + bundled
+; 145 MB model). recursesubdirs/createallsubdirs copies the nested _internal\.
+Source: "dist\FreeFlow\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; A copy of the icon at the app root so shortcuts always resolve it.
+Source: "assets\freeflow.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
+; Created unconditionally (no checkbox page) — a friend gets the desktop +
+; Start-menu icons automatically.
 Name: "{userdesktop}\{#MyAppName}";  Filename: "{app}\{#MyAppExeName}"; \
-      IconFilename: "{app}\assets\freeflow.ico"; WorkingDir: "{app}"; Tasks: desktopicon
+      IconFilename: "{app}\freeflow.ico"; WorkingDir: "{app}"
 Name: "{userprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; \
-      IconFilename: "{app}\assets\freeflow.ico"; WorkingDir: "{app}"; Tasks: startmenuicon
-Name: "{userprograms}\Desinstaller {#MyAppName}"; Filename: "{uninstallexe}"; Tasks: startmenuicon
+      IconFilename: "{app}\freeflow.ico"; WorkingDir: "{app}"
+Name: "{userprograms}\Desinstaller {#MyAppName}"; Filename: "{uninstallexe}"
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Lancer {#MyAppName}"; Flags: nowait postinstall skipifsilent
-; On silent upgrade (triggered by the in-app updater) we still want the app
-; to relaunch automatically so the user doesn't have to.
+; Auto-launch after a normal install (no finished page). Runs automatically
+; at the end of the wizard because there is no `postinstall` flag.
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait skipifsilent runasoriginaluser
+; Silent upgrade (triggered by the in-app updater): relaunch automatically.
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait runasoriginaluser; Check: ShouldRelaunchAfterSilent
 
 [Code]

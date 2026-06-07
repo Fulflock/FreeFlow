@@ -17,10 +17,13 @@ hiddenimports = [
     "tkinter", "tkinter.ttk", "tkinter.filedialog", "tkinter.messagebox",
     "webview", "webview.platforms.edgechromium",
     "keyboard", "win32event", "win32api", "win32con", "win32gui",
+    # win32com.client (+ COM plumbing) — used by src.config to create the
+    # "launch at startup" Startup-folder shortcut via WScript.Shell.
+    "win32com", "win32com.client", "pythoncom", "pywintypes",
     "ctypes", "ctypes.wintypes",
     "src.audio", "src.transcriber", "src.injector", "src.ui",
     "src.history", "src.idle_bubble", "src.main", "src.fonts", "src.updater",
-    "src.assets",
+    "src.config", "src.assets",
     "src.windows", "src.windows.history",
     "src.windows.main_window",
     "src.windows.onboarding", "src.windows.settings",
@@ -41,6 +44,17 @@ for root, _, files in os.walk("src/windows"):
 for root, _, files in os.walk("src/assets"):
     for f in files:
         if f.lower().endswith((".woff2", ".woff", ".ttf", ".otf")):
+            src = os.path.join(root, f)
+            datas.append((src, os.path.dirname(src).replace("\\", "/")))
+
+# Bundled faster-whisper model(s) — ship the transcription engine INSIDE the
+# app so the very first dictation works instantly, 100% offline, with no
+# 150 MB HuggingFace download on first run. Transcriber._resolve_model() looks
+# for these under sys._MEIPASS/models/<size>/. Loose files in onedir (not
+# compressed into the exe), so they don't slow startup.
+if os.path.isdir("models"):
+    for root, _, files in os.walk("models"):
+        for f in files:
             src = os.path.join(root, f)
             datas.append((src, os.path.dirname(src).replace("\\", "/")))
 
@@ -86,8 +100,14 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# ── onedir (NOT onefile) ─────────────────────────────────────────────────
+# Why onedir: a --onefile exe re-extracts ~250 MB to a temp dir on EVERY
+# launch → 5-15 s cold start each time. onedir ships a folder the installer
+# drops in place, so the app starts ~3x faster and the 145 MB model stays as a
+# loose memory-mapped file (never unpacked). The installer hides the folder.
 exe = EXE(
-    pyz, a.scripts, a.binaries, a.zipfiles, a.datas, [],
+    pyz, a.scripts, [],
+    exclude_binaries=True,
     name=APP_NAME,
     debug=False,
     bootloader_ignore_signals=False,
@@ -103,4 +123,15 @@ exe = EXE(
     entitlements_file=None,
     icon=ICON,
     version=None,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name=APP_NAME,
 )

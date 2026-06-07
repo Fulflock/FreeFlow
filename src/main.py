@@ -1,32 +1,40 @@
-import json
 import threading
 import time
 import sys
 import os
+import traceback
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.audio import AudioRecorder
-from src.transcriber import Transcriber
+from src.transcriber import Transcriber, apply_snippets
 from src.injector import paste_at_cursor
 from src.ui import FreeFlowUI
 from src.history import DictationHistory
 from src.updater import start_background_check
+from src.config import load_config
 
 
-def get_base_path():
-    if getattr(sys, "frozen", False):
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# ── Crash log ──────────────────────────────────────────────────────────────
+# Anything fatal — uncaught exceptions, premature UI loop exit — lands here
+# so we can diagnose the "app disappears silently" reports. One file, append-only.
+_CRASH_LOG = os.path.join(os.path.expanduser("~"), ".freeflow", "crash.log")
 
 
-def load_config():
-    base = get_base_path()
-    for candidate in [os.path.join(base, "config.json"), os.path.join(base, "_internal", "config.json")]:
-        if os.path.exists(candidate):
-            with open(candidate, "r", encoding="utf-8") as f:
-                return json.load(f)
-    return {}
+def _log_crash(reason: str, exc: BaseException | None = None) -> None:
+    """Append a crash entry to ~/.freeflow/crash.log. Never raises."""
+    try:
+        os.makedirs(os.path.dirname(_CRASH_LOG), exist_ok=True)
+        with open(_CRASH_LOG, "a", encoding="utf-8") as f:
+            f.write(f"\n=== {datetime.now().isoformat(timespec='seconds')} ===\n")
+            f.write(f"reason: {reason}\n")
+            if exc is not None:
+                f.write("traceback:\n")
+                f.write("".join(traceback.format_exception(type(exc), exc, exc.__traceback__)))
+            f.write("\n")
+    except Exception:
+        pass  # logging must never crash the crash handler
 
 
 class FreeFlow:
@@ -36,15 +44,23 @@ class FreeFlow:
         self.transcriber = Transcriber(
             model_size=self.config.get("model_size", "base"),
             language=self.config.get("language", "fr"),
+            auto_punctuation=self.config.get("auto_punctuation", True),
+            custom_words=self.config.get("custom_words", []),
         )
         self.ui = FreeFlowUI(
             opacity=self.config.get("overlay_opacity", 0.85),
             on_quit=self.quit,
             amp_provider=self.recorder.get_current_amplitude,
+            get_config=lambda: self.config,
+            apply_config=self.apply_config,
         )
         self.history = DictationHistory()
         self.recording = False
         self._record_start_time = 0
+        # Idempotency guard, mirrors FreeFlowUI._quitting.
+        # Belt-and-suspenders: even if the UI guard misfires, this one stops
+        # the tray → ui.quit → FreeFlow.quit → ui.stop → ui.quit recursion.
+        self._quitting = False
         self._setup_hotkey()
 
     def _setup_hotkey(self):
@@ -176,6 +192,9 @@ class FreeFlow:
                     return
                 duration = max(0.0, time.time() - self._record_start_time) if self._record_start_time > 0 else 0.0
                 text = self.transcriber.transcribe(audio_data)
+                # Voice snippets: if the whole dictation matches a trigger,
+                # expand it to the saved block (e.g. "mon mail" → address).
+                text = apply_snippets(text, self.config.get("snippets", []))
                 stripped = (text or "").strip()
                 if stripped:
                     self.history.save(stripped, duration)
@@ -190,12 +209,49 @@ class FreeFlow:
         threading.Thread(target=do_transcribe, daemon=True).start()
 
     def quit(self):
+        # Idempotent. Without this, ui.quit → external_quit (= self.quit) →
+        # ui.stop → ui.quit recurses until RecursionError.
+        if self._quitting:
+            return
+        self._quitting = True
         try:
             import keyboard as _kb
             _kb.unhook_all()
         except Exception:
             pass
-        self.ui.stop()
+        try:
+            self.ui.stop()
+        except Exception:
+            traceback.print_exc()
+        # Safety net: if ANY of the cleanups above hangs (pystray.stop deadlock,
+        # WebView2 destroy stall, tkinter mainloop stuck) we still die cleanly
+        # after 3 s instead of staying zombie in the tray.
+        def _force_exit():
+            _log_crash("force-exit after 3s — clean shutdown did not finish in time")
+            os._exit(0)
+        threading.Timer(3.0, _force_exit).start()
+
+    def apply_config(self, new_cfg: dict) -> None:
+        """Apply a freshly-saved config. Called by the Settings window.
+
+        Live (no restart): language, auto_punctuation.
+        Needs restart (handled by the Settings UI's note): model_size,
+        hotkey_combo, overlay_opacity. We still store them so the next launch
+        picks them up.
+        """
+        try:
+            self.config = dict(new_cfg or {})
+            # Live-applicable — the transcriber reads these per call.
+            self.transcriber.language = self.config.get("language", "fr")
+            self.transcriber.auto_punctuation = bool(
+                self.config.get("auto_punctuation", True)
+            )
+            self.transcriber.custom_words = list(
+                self.config.get("custom_words", [])
+            )
+            # snippets are read live from self.config in _on_hotkey_release
+        except Exception:
+            traceback.print_exc()
 
     def run(self):
         print("FreeFlow — Chargement du modele Whisper...")
@@ -209,7 +265,6 @@ class FreeFlow:
         try:
             start_background_check(self.config)
         except Exception:
-            import traceback
             traceback.print_exc()
 
         # On manual launch (no --silent), pop the Main Window so the user sees
@@ -222,11 +277,15 @@ class FreeFlow:
                     time.sleep(1.2)
                     self.ui.open_main_window()
                 except Exception:
-                    import traceback
                     traceback.print_exc()
             threading.Thread(target=_open_main_when_ready, daemon=True).start()
 
+        # webview.start() blocks here. When it returns either:
+        #   - the user clicked Quit (self._quitting == True) → clean exit, no log
+        #   - or WebView2/pywebview crashed → log it so we can diagnose later
         self.ui.start()
+        if not self._quitting:
+            _log_crash("UI loop exited unexpectedly without a Quit (WebView2 crash?)")
 
 
 if __name__ == "__main__":
@@ -241,5 +300,14 @@ if __name__ == "__main__":
     except ImportError:
         pass  # pywin32 not installed — proceed without enforcement
 
-    app = FreeFlow()
-    app.run()
+    # Top-level safety net: any uncaught exception here would otherwise just
+    # disappear silently (no console window in a windowed PyInstaller build).
+    try:
+        app = FreeFlow()
+        app.run()
+    except SystemExit:
+        raise
+    except BaseException as e:
+        _log_crash("uncaught exception at top level", e)
+        # Re-raise so the OS still treats it as a crash (gets a Windows Error Report).
+        raise
