@@ -32,7 +32,7 @@ from typing import Optional
 
 # Bumped on every release. MUST match `MyAppVersion` in installer.iss
 # and be tagged as `v0.X.Y` on GitHub.
-CURRENT_VERSION = "0.1.1"
+CURRENT_VERSION = "0.1.2"
 
 # Source of truth for the auto-updater. config.json can override via the
 # `github_repo` key, but if it's missing/empty we fall back to this constant

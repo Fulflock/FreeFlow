@@ -472,7 +472,7 @@ input[type=range].range::-webkit-slider-thumb {
       <div class="about-card">
         <div class="about-logo">ff</div>
         <h3>FreeFlow</h3>
-        <div class="ver">version 0.1.1 · MIT</div>
+        <div class="ver">version 0.1.2 · MIT</div>
         <p>Une dictée vocale 100 % locale pour Windows. Aucune donnée n'est envoyée sur Internet — ton micro ne quitte jamais ta machine.</p>
         <button class="btn-sm">github.com/Fulflock/FreeFlow</button>
       </div>

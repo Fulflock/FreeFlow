@@ -36,14 +36,24 @@ TRANSPARENT = "magenta"   # color-key used by Win32 to punch-through
 
 
 # ── Bubble geometry (matches the SVG viewBox 64x56 scaled to render size) ──
-# We render at 2x logical size to compensate for tkinter's DPI mapping on
-# 200%-scaled displays (the canvas otherwise appears half-sized).
-SCALE = 2
-BUBBLE_W = 40 * SCALE
-BUBBLE_H = 36 * SCALE
-PAD = 6 * SCALE      # canvas padding to give room for the drop shadow + float
+# The bubble must be the SAME PHYSICAL size on every screen. The process is
+# per-monitor DPI-aware (set above), so tkinter works in PHYSICAL pixels —
+# a fixed size therefore looks tiny on a 200% screen and HUGE on a 100% one.
+# So scale by the real monitor DPI: 96 dpi (100%) → 1.0, 192 dpi (200%) → 2.0.
+# (A hardcoded SCALE=2, calibrated on a 200% laptop, made the bubble twice too
+#  big on a friend's 100% display — this is the fix.)
+def _dpi_scale():
+    try:
+        return max(1.0, ctypes.windll.user32.GetDpiForSystem() / 96.0)
+    except Exception:
+        return 1.0
+
+SCALE = _dpi_scale()
+BUBBLE_W = round(40 * SCALE)
+BUBBLE_H = round(36 * SCALE)
+PAD = round(6 * SCALE)      # canvas padding to give room for the drop shadow + float
 CANVAS_W = BUBBLE_W + PAD * 2
-CANVAS_H = BUBBLE_H + PAD * 2 + 4 * SCALE
+CANVAS_H = BUBBLE_H + PAD * 2 + round(4 * SCALE)
 
 
 _SX = BUBBLE_W / 64.0
