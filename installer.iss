@@ -1,6 +1,6 @@
 ; installer.iss — Inno Setup script for FreeFlow (no admin, near one-click)
 #define MyAppName      "FreeFlow"
-#define MyAppVersion   "0.1.2"
+#define MyAppVersion   "0.1.3"
 #define MyAppPublisher "Benjamin Mathias"
 #define MyAppExeName   "FreeFlow.exe"
 
