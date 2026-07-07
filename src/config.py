@@ -42,6 +42,9 @@ DEFAULTS: dict = {
     # Voice snippets: say the trigger phrase → it expands to the full text.
     # Each item is {"trigger": "...", "expansion": "..."}.
     "snippets": [],
+    # Max length of a single dictation, in seconds (safety cap for a stuck key).
+    # 300 = 5 min. Raise it if you dictate very long monologues.
+    "max_dictation_seconds": 300,
 }
 
 # Keys the Settings window is allowed to write. Anything else is ignored on
@@ -49,7 +52,7 @@ DEFAULTS: dict = {
 _SETTABLE_KEYS = {
     "hotkey_combo", "language", "model_size", "overlay_opacity",
     "launch_at_startup", "auto_punctuation", "update_check_enabled",
-    "custom_words", "snippets",
+    "custom_words", "snippets", "max_dictation_seconds",
 }
 
 

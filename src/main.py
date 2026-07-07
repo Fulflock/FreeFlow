@@ -159,11 +159,16 @@ class FreeFlow:
                 import traceback
                 traceback.print_exc()
 
-        # Watchdog: force-stop if recording stuck > 30s
+        # Watchdog: force-stop only if a recording runs way past the configured
+        # max — a safety net for a stuck/missed key release, NOT the normal cap.
+        # Default 300s (5 min); was 30s, which cut off long dictations. Tunable
+        # via config.json "max_dictation_seconds".
+        max_dictation = max(10, int(self.config.get("max_dictation_seconds", 300) or 300))
+
         def _watchdog():
             while True:
                 time.sleep(2)
-                if self.recording and (time.time() - self._record_start_time) > 30:
+                if self.recording and (time.time() - self._record_start_time) > max_dictation:
                     with self._press_lock:
                         if self.recording:
                             try:
