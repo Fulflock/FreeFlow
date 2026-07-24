@@ -37,3 +37,9 @@ Thumbs.db
 .idea/
 
 # Note: FreeFlow.spec IS committed (required to reproduce the build)
+
+# Local Netlify folder
+.netlify
+
+# Fichier .exe payant hébergé sur Netlify (pas dans git — >100 Mo)
+docs/dl-priv-*/
