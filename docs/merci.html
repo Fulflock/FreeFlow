@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merci pour ton achat — FreeFlow</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Merci pour ton achat de FreeFlow. Télécharge l'application et installe-la en 1 minute.">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 56'%3E%3Cpath d='M10 6H54A6 6 0 0160 12V36A6 6 0 0154 42H30L20 52L22 42H10A6 6 0 014 36V12A6 6 0 0110 6Z' fill='%23ff5d8f' stroke='%2316140f' stroke-width='3' stroke-linejoin='round'/%3E%3Cg fill='%2316140f'%3E%3Cpath d='M19 33V16H29V20H23V23.5H28V27.5H23V33Z'/%3E%3Cpath d='M33 33V16H43V20H37V23.5H42V27.5H37V33Z'/%3E%3C/g%3E%3C/svg%3E">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#fef6e4; --ink:#16140f; --paper:#fff;
+  --c1:#ff5d8f; --c2:#5d9cff; --c3:#ffd23f; --c4:#5fdba7; --c5:#b794f6;
+  --dot:rgba(0,0,0,.08);
+  --r-card:22px; --r-pill:999px; --bw:2.5px;
+  --shadow:6px 6px 0 var(--ink); --shadow-sm:3px 3px 0 var(--ink); --shadow-lg:10px 10px 0 var(--ink);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Space Grotesk',system-ui,sans-serif;
+  background:radial-gradient(var(--dot) 1.5px,transparent 1.5px) 0 0/24px 24px,var(--bg);
+  color:var(--ink);line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:760px;margin:0 auto;padding:0 24px}
+.mono{font-family:'JetBrains Mono',monospace}
+.hand{font-family:'Caveat',cursive;font-weight:700}
+
+.btn{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:16px;
+  padding:13px 24px;border:var(--bw) solid var(--ink);border-radius:var(--r-pill);
+  background:var(--paper);color:var(--ink);cursor:pointer;box-shadow:var(--shadow-sm);
+  transition:transform .12s,box-shadow .12s;white-space:nowrap}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:0 0 0 var(--ink)}
+.btn.primary{background:var(--c1);color:#fff}
+.btn.lg{font-size:18px;padding:17px 34px}
+.btn svg{width:20px;height:20px}
+
+/* Top bar */
+.topbar{padding:22px 0}
+.brand{display:flex;align-items:center;gap:11px;font-weight:700;font-size:20px;letter-spacing:-.5px}
+.brand svg{width:34px;height:30px;filter:drop-shadow(2px 2px 0 rgba(0,0,0,.15))}
+
+/* Hero card */
+.thanks{text-align:center;padding:20px 0 60px}
+.badge-ok{width:88px;height:88px;border-radius:50%;background:var(--c4);border:var(--bw) solid var(--ink);
+  box-shadow:var(--shadow);display:grid;place-items:center;margin:12px auto 26px;transform:rotate(-4deg)}
+.badge-ok svg{width:46px;height:46px;color:var(--ink)}
+.thanks h1{font-size:clamp(34px,6vw,52px);line-height:1;letter-spacing:-1.5px;font-weight:700}
+.thanks .pink{color:var(--c1)}
+.thanks .lead{font-size:18px;color:rgba(22,20,15,.8);max-width:34ch;margin:18px auto 30px;line-height:1.55}
+
+.dl-box{background:var(--paper);border:var(--bw) solid var(--ink);border-radius:var(--r-card);
+  box-shadow:var(--shadow-lg);padding:32px 28px;max-width:480px;margin:0 auto}
+.dl-box .file{font-family:'JetBrains Mono',monospace;font-size:13px;color:rgba(22,20,15,.6);margin-top:16px}
+
+/* Steps */
+.steps{max-width:560px;margin:52px auto 0;text-align:left;display:flex;flex-direction:column;gap:16px}
+.steps h2{text-align:center;font-size:24px;letter-spacing:-.6px;margin-bottom:6px}
+.stp{display:flex;gap:16px;align-items:flex-start;background:var(--paper);border:2px solid var(--ink);
+  border-radius:16px;padding:16px 18px;box-shadow:var(--shadow-sm)}
+.stp .n{flex-shrink:0;width:34px;height:34px;border-radius:50%;border:2px solid var(--ink);background:var(--c3);
+  display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px}
+.stp h3{font-size:16px;margin-bottom:3px}
+.stp p{font-size:14.5px;color:rgba(22,20,15,.76);line-height:1.5}
+.stp code,.kbd{font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--bg);
+  border:1.5px solid var(--ink);border-radius:5px;padding:1px 6px}
+.warn{background:var(--c3);border:2px solid var(--ink);border-radius:14px;padding:14px 16px;
+  font-size:14px;line-height:1.5;max-width:560px;margin:22px auto 0;box-shadow:var(--shadow-sm)}
+.warn b{color:var(--c1)}
+
+.help{text-align:center;margin:44px auto 0;font-size:14.5px;color:rgba(22,20,15,.7)}
+footer{text-align:center;padding:40px 0;font-size:13px;color:rgba(22,20,15,.55)}
+@media(max-width:520px){.btn.lg{font-size:16px;padding:15px 24px}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 64 56" aria-hidden="true"><path d="M10 6H54A6 6 0 0160 12V36A6 6 0 0154 42H30L20 52L22 42H10A6 6 0 014 36V12A6 6 0 0110 6Z" fill="#ff5d8f" stroke="#16140f" stroke-width="2.5" stroke-linejoin="round"/><g fill="#16140f"><path d="M19 33V16H29V20H23V23.5H28V27.5H23V33Z"/><path d="M33 33V16H43V20H37V23.5H42V27.5H37V33Z"/></g></svg>
+      FreeFlow
+    </a>
+  </div>
+</div>
+
+<main class="wrap thanks">
+  <div class="badge-ok">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  </div>
+  <h1>Merci pour ton <span class="pink">achat</span> 🎉</h1>
+  <p class="lead">FreeFlow est à toi, à vie. Il ne reste qu'à le télécharger et l'installer — ça prend 1 minute.</p>
+
+  <div class="dl-box">
+    <a class="btn primary lg" href="[[LIEN_TELECHARGEMENT_EXE_PRIVE]]" download>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
+      Télécharger FreeFlow
+    </a>
+    <div class="file">FreeFlow-Setup.exe · Windows 10/11 · ~190 Mo</div>
+  </div>
+
+  <div class="steps">
+    <h2>Installation en 3 étapes</h2>
+    <div class="stp">
+      <div class="n">1</div>
+      <div><h3>Télécharge</h3><p>Clique sur le bouton ci-dessus pour récupérer <code>FreeFlow-Setup.exe</code>. Le moteur de transcription est déjà inclus.</p></div>
+    </div>
+    <div class="stp">
+      <div class="n">2</div>
+      <div><h3>Lance l'installeur</h3><p>Double-clique sur le fichier. FreeFlow s'installe tout seul et s'ouvre.</p></div>
+    </div>
+    <div class="stp">
+      <div class="n">3</div>
+      <div><h3>Parle !</h3><p>Dans n'importe quel champ de texte, maintiens <span class="kbd">Ctrl + ␣</span>, dis ta phrase, lâche. C'est écrit. ✨</p></div>
+    </div>
+  </div>
+
+  <div class="warn">⚠️ Windows affiche un écran bleu « Windows a protégé votre ordinateur » ? C'est normal (l'app n'est pas encore signée). Clique sur <b>« Informations complémentaires »</b> puis <b>« Exécuter quand même »</b>.</div>
+
+  <p class="help">Un souci avec ton téléchargement ? Écris-moi à <b>benjamin31.mathias@gmail.com</b> et je t'aide tout de suite. 💛</p>
+</main>
+
+<footer>FreeFlow · 100% local · merci de ta confiance ♡</footer>
+
+</body>
+</html>
