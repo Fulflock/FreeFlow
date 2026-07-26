@@ -511,5 +511,12 @@ document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
 // FAQ: close others when one opens
 document.querySelectorAll('.qa').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)document.querySelectorAll('.qa').forEach(o=>{if(o!==d)o.open=false;});}));
 </script>
+
+<!-- Compteur de visites (GoatCounter) — privé, sans cookies, gratuit.
+     ACTIVATION (30 s) : crée un compte sur https://www.goatcounter.com,
+     choisis ton "code" (sous-domaine), puis remplace VOTRECODE ci-dessous
+     (ou donne le code à Benjamin/Claude qui le branche). -->
+<script data-goatcounter="https://VOTRECODE.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
